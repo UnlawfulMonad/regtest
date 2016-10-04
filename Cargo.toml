@@ -2,6 +2,11 @@
 name = "regtest"
 version = "0.1.0"
 authors = ["Lucas Salibian <lucas.salibian@gmail.com>"]
+homepage = "https://github.com/tqoitc/regtest"
+readme = "README.md"
+keywords = ["regex", "command"]
+licence = "GPL-3.0"
+licence-file = "LICENSE"
 description = """regtest is an interactive frontend for the
 regex crate."""
 
