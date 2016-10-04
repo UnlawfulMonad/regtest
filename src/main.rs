@@ -40,7 +40,7 @@ const HELP: &'static str = "\
 :h - Print this menu
 :q - Quit";
 
-const MENU_PRMT: &'static str = ":b - go back to the regex prompt";
+const MENU_PRMT: &'static str = ":b - Go back to the regex prompt";
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 enum Action {
