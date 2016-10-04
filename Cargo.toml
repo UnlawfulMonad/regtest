@@ -5,8 +5,7 @@ authors = ["Lucas Salibian <lucas.salibian@gmail.com>"]
 homepage = "https://github.com/tqoitc/regtest"
 readme = "README.md"
 keywords = ["regex", "command"]
-licence = "GPL-3.0"
-licence-file = "LICENSE"
+license = "GPL-3.0"
 description = """regtest is an interactive frontend for the
 regex crate."""
 
