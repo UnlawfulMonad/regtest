@@ -1,0 +1,13 @@
+[package]
+name = "regtest"
+version = "0.1.0"
+authors = ["Lucas Salibian <lucas.salibian@gmail.com>"]
+description = """regtest is an interactive frontend for the
+regex crate."""
+
+[dependencies]
+regex = "*"
+rustyline = "1.0.0"
+time = "0.1.35"
+bitflags = "0.7.0"
+clap = "2.13.0"

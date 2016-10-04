@@ -1,0 +1,14 @@
+# Binary files
+*.o
+*.a
+*.so
+
+*.obj
+*.lib
+*.dll
+
+# Vim swp files
+*.swp*
+
+# Cargo build files
+target
