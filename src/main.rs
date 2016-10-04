@@ -7,12 +7,15 @@ extern crate time;
 #[macro_use]
 extern crate bitflags;
 extern crate rustyline;
+extern crate clap;
 
 use std::io;
 use std::io::Write;
 use std::default::Default;
 
 use regex::Regex;
+
+use clap::{Arg, App};
 
 use rustyline::Editor;
 
@@ -177,6 +180,20 @@ fn prompt(editor: &mut Editor<()>, reg: &Regex, config: &mut Config) -> bool {
 
 fn main() {
     let mut config = Config::default();
+    let matches = App::new("regtest")
+        .version("0.1.0")
+        .author("Lucas Salibian <lucas.salibian@gmail.com>")
+        .about("Test regex from the command line")
+        .arg(Arg::with_name("no-verbose-errors")
+             .short("v")
+             .long("no-verbose-errors")
+             .help("Disable verbose errors when the regex fails to compile"))
+        .get_matches();
+
+    if matches.is_present("no-verbose-errors") {
+        config.remove(VERBOSE_ERRORS);
+    }
+
     let mut editor = Editor::<()>::new();
     loop {
         if !regex_prompt(&mut editor, &mut config) {
