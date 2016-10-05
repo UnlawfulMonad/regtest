@@ -78,6 +78,7 @@ fn options_menu(line: &str, config: &mut Config) -> Action {
     match &line as &str {
         // Quit on :q
         ":q" => Action::Exit,
+
         // Toggle verbose errors
         ":v" => {
             config.toggle(VERBOSE_ERRORS);
@@ -121,6 +122,7 @@ fn options_menu(line: &str, config: &mut Config) -> Action {
             write!(stderr, "{}\n", HELP);
             Action::Loop
         },
+
         // Continue
         _ => Action::Continue,
     }
