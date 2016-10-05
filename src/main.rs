@@ -165,7 +165,10 @@ fn regex_prompt(editor: &mut Editor<()>, config: &mut Config) -> bool {
     // Display the time if the appropriate flag is set
     if config.contains(COMPILE_TIME) {
         let dur = t2 - t1;
-        write!(stderr, "Regex compiled in {}ms\n", dur.num_milliseconds());
+        write!(stderr, "Regex compiled in {}ns\n", match dur.num_nanoseconds() {
+            Some(x) => x,
+            None => dur.num_milliseconds(),
+        });
     }
 
     // Display a prompt using the compiled regex
