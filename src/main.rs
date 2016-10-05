@@ -29,7 +29,9 @@ extern crate clap;
 
 use std::io;
 use std::io::Write;
+use std::env;
 use std::default::Default;
+use std::path::PathBuf;
 
 use regex::Regex;
 
@@ -222,25 +224,71 @@ fn prompt(editor: &mut Editor<()>, reg: &Regex, config: &mut Config) -> bool {
     }
 }
 
+/// Determine and load the history file erroring out
+/// upon failure.
+///
+/// # Notes
+/// Failure within this function is non-fatal. It will
+/// not panic and only show a warning to the user.
+fn with_history_file<F>(mut f: F)
+where F: FnMut(&PathBuf),
+{
+    if cfg!(unix) {
+        match env::var("HOME") {
+            Ok(x) => {
+                let mut path = PathBuf::from(x);
+                path.push(".regtest_history");
+                f(&path);
+            },
+            Err(_) => println!("Failed to find history file"),
+        }
+    } else if cfg!(windows) {
+        match env::var("APPDATA") {
+            Ok(x) => {
+                let mut path = PathBuf::from(x);
+                path.push("Roaming");
+                path.push("regtest_history");
+                f(&path);
+            },
+            Err(_) => println!("Failed to find history"),
+        }
+    }
+}
+
 fn main() {
     let mut config = Config::default();
     // Configure command line flags
     let matches = App::new("regtest")
-        .version("0.1.0")
+        .version(env!("CARGO_PKG_VERSION"))
         .author("Lucas Salibian <lucas.salibian@gmail.com>")
-        .about("Test regex from the command line")
+        .about("Test regexes from the command line")
         .arg(Arg::with_name("no-verbose-errors")
-             .short("v")
              .long("no-verbose-errors")
              .help("Disable verbose errors when the regex fails to compile"))
+        .arg(Arg::with_name("capture")
+             .short("c")
+             .long("capture")
+             .help("Enable capture group display after matching test"))
+        .arg(Arg::with_name("no-comple-time")
+             .long("no-compile-time")
+             .help("Disable showing the amount of time it took\
+                    to compile the regular expression."))
         .get_matches();
 
     if matches.is_present("no-verbose-errors") {
         config.remove(VERBOSE_ERRORS);
     }
 
+    if matches.is_present("capture") {
+        config.insert(CAPTURE_GROUPS);
+    }
+
     // Initialize the rustline (readline) editor
     let mut editor = Editor::<()>::new();
+
+    with_history_file(|path| {
+        editor.load_history(path);
+    });
 
     // Enter the main loop
     loop {
@@ -248,4 +296,8 @@ fn main() {
             break;
         }
     }
+
+    with_history_file(|path| {
+        editor.save_history(path).unwrap();
+    });
 }
