@@ -60,6 +60,9 @@ const HELP: &'static str = "\
 
 const MENU_PRMT: &'static str = ":b - Go back to the regex prompt";
 
+/// Define the possible things that may happen after a menu
+/// ineration within any of the sub menus (regex input or
+/// testing input).
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 enum Action {
     Continue,
@@ -68,11 +71,14 @@ enum Action {
     Exit,
 }
 
+/// Check if a given `line` corresponds to a menu command.
 fn options_menu(line: &str, config: &mut Config) -> Action {
     let mut stderr = io::stderr();
     // What can you do from here?
     match &line as &str {
+        // Quit on :q
         ":q" => Action::Exit,
+        // Toggle verbose errors
         ":v" => {
             config.toggle(VERBOSE_ERRORS);
             if config.contains(VERBOSE_ERRORS) {
@@ -82,6 +88,9 @@ fn options_menu(line: &str, config: &mut Config) -> Action {
             }
             Action::Loop
         },
+
+        // Toggle message reporting time to
+        // compile regex
         ":t" => {
             config.toggle(COMPILE_TIME);
             if config.contains(COMPILE_TIME) {
@@ -91,7 +100,12 @@ fn options_menu(line: &str, config: &mut Config) -> Action {
             }
             Action::Loop
         },
+
+        // When in regex test menu, go back to regex
+        // prompt. Otherwise, do nothing
         ":b" => Action::ToRegexPrompt,
+
+        // Toggle displaying capture groups
         ":g" => {
             config.toggle(CAPTURE_GROUPS);
             if config.contains(CAPTURE_GROUPS) {
@@ -101,6 +115,8 @@ fn options_menu(line: &str, config: &mut Config) -> Action {
             }
             Action::Loop
         },
+
+        // Display help
         ":h" | ":?" => {
             write!(stderr, "{}\n", HELP);
             Action::Loop
@@ -110,22 +126,25 @@ fn options_menu(line: &str, config: &mut Config) -> Action {
     }
 }
 
-// Show a prompt saying "n>" requesting
-// that a regex be input.
-// If this function returns true, the user will
-// be prompted to input a regex.
+/// Show a prompt saying "n>" requesting that a regex be input.
+/// If this function returns true, the user will be prompted
+/// to input a regex and if false the program will exit.
 fn regex_prompt(editor: &mut Editor<()>, config: &mut Config) -> bool {
+    // Get stderr up here just for convienience
     let mut stderr = io::stderr();
 
+    // Read the line and add it to history
     let line = editor.readline("Input> ").expect("Failed to read line!");
     editor.add_history_entry(&line);
 
+    // Process the line against the options menu
     match options_menu(&line, config) {
         Action::Continue => {},
         Action::ToRegexPrompt | Action::Loop => return true,
         Action::Exit => return false,
     }
  
+    // Get the time for compiling regex
     let t1 = time::now();
     let reg = match Regex::new(&line) {
         Ok(r) => r,
@@ -141,11 +160,13 @@ fn regex_prompt(editor: &mut Editor<()>, config: &mut Config) -> bool {
     };
 
     let t2 = time::now();
+    // Display the time if the appropriate flag is set
     if config.contains(COMPILE_TIME) {
         let dur = t2 - t1;
         write!(stderr, "Regex compiled in {}ms\n", dur.num_milliseconds());
     }
 
+    // Display a prompt using the compiled regex
     prompt(editor, &reg, config)
 }
 
@@ -198,6 +219,7 @@ fn prompt(editor: &mut Editor<()>, reg: &Regex, config: &mut Config) -> bool {
 
 fn main() {
     let mut config = Config::default();
+    // Configure command line flags
     let matches = App::new("regtest")
         .version("0.1.0")
         .author("Lucas Salibian <lucas.salibian@gmail.com>")
@@ -212,7 +234,10 @@ fn main() {
         config.remove(VERBOSE_ERRORS);
     }
 
+    // Initialize the rustline (readline) editor
     let mut editor = Editor::<()>::new();
+
+    // Enter the main loop
     loop {
         if !regex_prompt(&mut editor, &mut config) {
             break;
