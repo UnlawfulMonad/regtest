@@ -252,6 +252,9 @@ where F: FnMut(&PathBuf),
             },
             Err(_) => println!("Failed to find history"),
         }
+    } else {
+        println!("Unknown platform. Unable to determine \
+                  location for history file.");
     }
 }
 
