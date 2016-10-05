@@ -3,11 +3,12 @@ name = "regtest"
 version = "0.2.0"
 authors = ["Lucas Salibian <lucas.salibian@gmail.com>"]
 homepage = "https://github.com/tqoitc/regtest"
+repository = "https://github.com/tqoitc/regtest"
 readme = "README.md"
 keywords = ["regex", "command"]
 license = "GPL-3.0"
-description = """regtest is an interactive frontend for the
-regex crate."""
+description = """regtest is an easy to use interactive frontend
+for the regex crate."""
 
 [dependencies]
 regex = "0.1.77"
