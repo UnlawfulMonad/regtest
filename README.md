@@ -6,6 +6,6 @@ crate. For help run `:h` from any screen.
 
 ## Install
 
-Run `cargo install regtest`.
+To install run `cargo install regtest`.
 
 [1]: https://crates.io/crates/regex
