@@ -272,7 +272,7 @@ fn main() {
              .short("c")
              .long("capture")
              .help("Enable capture group display after matching test"))
-        .arg(Arg::with_name("no-comple-time")
+        .arg(Arg::with_name("no-compile-time")
              .long("no-compile-time")
              .help("Disable showing the amount of time it took\
                     to compile the regular expression."))
