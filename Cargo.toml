@@ -11,8 +11,8 @@ description = """regtest is an easy to use interactive frontend
 for the regex crate."""
 
 [dependencies]
-regex = "0.1.77"
+regex = "^0.1.80"
 rustyline = "1.0.0"
-time = "0.1.35"
-bitflags = "0.7.0"
+time = "^0.1.35"
+bitflags = "^0.7.0"
 clap = "2.13.0"
