@@ -242,19 +242,9 @@ fn with_history_file<F>(mut f: F)
             }
             Err(_) => println!("Failed to find history file"),
         }
-    } else if cfg!(windows) {
-        match env::var("APPDATA") {
-            Ok(x) => {
-                let mut path = PathBuf::from(x);
-                path.push("Roaming");
-                path.push("regtest_history");
-                f(&path);
-            }
-            Err(_) => println!("Failed to find history"),
-        }
     } else {
-        println!("Warning: unknown platform. Unable to \
-                  determine location for history file.");
+        println!("Warning: Unable to determine location for\
+                  history file.");
     }
 }
 
