@@ -1,20 +1,19 @@
-/*
- * regtest - Interactive frontend for the regex crate
- * Copyright (C) 2016  Lucas Salibian
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
- * the GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+// regtest - Interactive frontend for the regex crate
+// Copyright (C) 2016  Lucas Salibian
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See
+// the GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//
 
 #![allow(dead_code)]
 #![allow(non_upper_case_globals)]
@@ -90,7 +89,7 @@ fn options_menu(line: &str, config: &mut Config) -> Action {
                 write!(stderr, "Verbose errors: off\n");
             }
             Action::Loop
-        },
+        }
 
         // Toggle message reporting time to
         // compile regex
@@ -102,7 +101,7 @@ fn options_menu(line: &str, config: &mut Config) -> Action {
                 write!(stderr, "Show compile time: off\n");
             }
             Action::Loop
-        },
+        }
 
         // When in regex test menu, go back to regex
         // prompt. Otherwise, do nothing
@@ -117,13 +116,13 @@ fn options_menu(line: &str, config: &mut Config) -> Action {
                 write!(stderr, "Show capture groups: off\n");
             }
             Action::Loop
-        },
+        }
 
         // Display help
         ":h" | ":?" => {
             write!(stderr, "{}\n", HELP);
             Action::Loop
-        },
+        }
 
         // Continue
         _ => Action::Continue,
@@ -143,11 +142,11 @@ fn regex_prompt(editor: &mut Editor<()>, config: &mut Config) -> bool {
 
     // Process the line against the options menu
     match options_menu(&line, config) {
-        Action::Continue => {},
+        Action::Continue => {}
         Action::ToRegexPrompt | Action::Loop => return true,
         Action::Exit => return false,
     }
- 
+
     // Get the time for compiling regex
     let t1 = time::now();
     let reg = match Regex::new(&line) {
@@ -160,17 +159,19 @@ fn regex_prompt(editor: &mut Editor<()>, config: &mut Config) -> bool {
                 stderr.write(b"Turn on verbose errors with :v\n");
             }
             return true;
-        },
+        }
     };
 
     let t2 = time::now();
     // Display the time if the appropriate flag is set
     if config.contains(COMPILE_TIME) {
         let dur = t2 - t1;
-        write!(stderr, "Regex compiled in {}ns\n", match dur.num_nanoseconds() {
-            Some(x) => x,
-            None => dur.num_milliseconds(),
-        });
+        write!(stderr,
+               "Regex compiled in {}ns\n",
+               match dur.num_nanoseconds() {
+                   Some(x) => x,
+                   None => dur.num_milliseconds(),
+               });
     }
 
     // Display a prompt using the compiled regex
@@ -197,20 +198,19 @@ fn prompt(editor: &mut Editor<()>, reg: &Regex, config: &mut Config) -> bool {
             Action::Continue => {
                 // Are we dealing with capture groups?
                 if config.contains(CAPTURE_GROUPS) {
-                    let caps = match reg.captures(&line){
+                    let caps = match reg.captures(&line) {
                         Some(v) => v,
                         None => {
                             write!(stderr, "Failed to match\n");
                             continue;
-                        },
+                        }
                     };
                     write!(stderr, "Captures:\n");
                     for (i, cap) in caps.iter().enumerate() {
-                        write!(stderr, "{}: {}\n", i, if let Some(c) = cap {
-                            c
-                        } else {
-                            "None"
-                        });
+                        write!(stderr,
+                               "{}: {}\n",
+                               i,
+                               if let Some(c) = cap { c } else { "None" });
                     }
                 } else {
                     if reg.is_match(&line) {
@@ -219,7 +219,7 @@ fn prompt(editor: &mut Editor<()>, reg: &Regex, config: &mut Config) -> bool {
                         write!(stderr, "Failed to match\n");
                     }
                 }
-            },
+            }
         }
     }
 }
@@ -231,7 +231,7 @@ fn prompt(editor: &mut Editor<()>, reg: &Regex, config: &mut Config) -> bool {
 /// Failure within this function is non-fatal. It will
 /// not panic and only show a warning to the user.
 fn with_history_file<F>(mut f: F)
-where F: FnMut(&PathBuf),
+    where F: FnMut(&PathBuf)
 {
     if cfg!(unix) {
         match env::var("HOME") {
@@ -239,7 +239,7 @@ where F: FnMut(&PathBuf),
                 let mut path = PathBuf::from(x);
                 path.push(".regtest_history");
                 f(&path);
-            },
+            }
             Err(_) => println!("Failed to find history file"),
         }
     } else if cfg!(windows) {
@@ -249,7 +249,7 @@ where F: FnMut(&PathBuf),
                 path.push("Roaming");
                 path.push("regtest_history");
                 f(&path);
-            },
+            }
             Err(_) => println!("Failed to find history"),
         }
     } else {
@@ -266,16 +266,15 @@ fn main() {
         .author("Lucas Salibian <lucas.salibian@gmail.com>")
         .about("Test regexes from the command line")
         .arg(Arg::with_name("no-verbose-errors")
-             .long("no-verbose-errors")
-             .help("Disable verbose errors when the regex fails to compile"))
+            .long("no-verbose-errors")
+            .help("Disable verbose errors when the regex fails to compile"))
         .arg(Arg::with_name("capture")
-             .short("c")
-             .long("capture")
-             .help("Enable capture group display after matching test"))
+            .short("c")
+            .long("capture")
+            .help("Enable capture group display after matching test"))
         .arg(Arg::with_name("no-compile-time")
-             .long("no-compile-time")
-             .help("Disable showing the amount of time it took\
-                    to compile the regular expression."))
+            .long("no-compile-time")
+            .help("Disable showing the amount of time it tookto compile the regular expression."))
         .get_matches();
 
     if matches.is_present("no-verbose-errors") {
