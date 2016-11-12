@@ -25,10 +25,10 @@ extern crate time;
 extern crate bitflags;
 extern crate rustyline;
 extern crate clap;
+extern crate app_dirs;
 
 use std::io;
 use std::io::Write;
-use std::env;
 use std::default::Default;
 use std::path::PathBuf;
 
@@ -37,6 +37,10 @@ use regex::Regex;
 use clap::{Arg, App};
 
 use rustyline::Editor;
+
+use app_dirs::{AppInfo, AppDataType, app_root};
+
+const APP_INFO: AppInfo = AppInfo { name: "regtest", author: "Lucas Salibian" };
 
 bitflags! {
     flags Config: u32 {
@@ -233,19 +237,15 @@ fn prompt(editor: &mut Editor<()>, reg: &Regex, config: &mut Config) -> bool {
 fn with_history_file<F>(mut f: F)
     where F: FnMut(&PathBuf)
 {
-    if cfg!(unix) {
-        match env::var("HOME") {
-            Ok(x) => {
-                let mut path = PathBuf::from(x);
-                path.push(".regtest_history");
-                f(&path);
-            }
-            Err(_) => println!("Failed to find history file"),
+    let mut path = match app_root(AppDataType::UserData, &APP_INFO) {
+        Ok(p) => p,
+        Err(e) => {
+            println!("Failed to write history file: {:?}", e);
+            return;
         }
-    } else {
-        println!("Warning: Unable to determine location for\
-                  history file.");
-    }
+    };
+    path.push("history");
+    f(&path);
 }
 
 fn main() {
