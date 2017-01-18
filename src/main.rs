@@ -40,7 +40,10 @@ use rustyline::Editor;
 
 use app_dirs::{AppInfo, AppDataType, app_root};
 
-const APP_INFO: AppInfo = AppInfo { name: "regtest", author: "Lucas Salibian" };
+const APP_INFO: AppInfo = AppInfo {
+    name: "regtest",
+    author: "Lucas Salibian",
+};
 
 bitflags! {
     flags Config: u32 {
@@ -202,19 +205,16 @@ fn prompt(editor: &mut Editor<()>, reg: &Regex, config: &mut Config) -> bool {
             Action::Continue => {
                 // Are we dealing with capture groups?
                 if config.contains(CAPTURE_GROUPS) {
-                    let caps = match reg.captures(&line) {
-                        Some(v) => v,
-                        None => {
-                            write!(stderr, "Failed to match\n");
-                            continue;
-                        }
-                    };
+                    let caps = reg.captures_iter(&line).enumerate();
                     write!(stderr, "Captures:\n");
-                    for (i, cap) in caps.iter().enumerate() {
-                        write!(stderr,
-                               "{}: {}\n",
-                               i,
-                               if let Some(c) = cap { c } else { "None" });
+                    for (i, outer_cap) in caps {
+                        for (j, cap) in outer_cap.iter().enumerate() {
+                            write!(stderr,
+                                   "{}:{}: {}\n",
+                                   i,
+                                   j,
+                                   if let Some(c) = cap { c } else { "None" });
+                        }
                     }
                 } else {
                     if reg.is_match(&line) {
@@ -278,9 +278,7 @@ fn main() {
     // Initialize the rustline (readline) editor
     let mut editor = Editor::<()>::new();
 
-    with_history_file(|path| {
-        editor.load_history(path);
-    });
+    with_history_file(|path| { editor.load_history(path); });
 
     // Enter the main loop
     loop {
@@ -289,7 +287,5 @@ fn main() {
         }
     }
 
-    with_history_file(|path| {
-        editor.save_history(path).unwrap();
-    });
+    with_history_file(|path| { editor.save_history(path).unwrap(); });
 }
