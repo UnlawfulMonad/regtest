@@ -213,7 +213,7 @@ fn prompt(editor: &mut Editor<()>, reg: &Regex, config: &mut Config) -> bool {
                                    "{}:{}: {}\n",
                                    i,
                                    j,
-                                   if let Some(c) = cap { c } else { "None" });
+                                   if let Some(c) = cap { c.as_str() } else { "None" });
                         }
                     }
                 } else {

@@ -12,7 +12,7 @@ description = """regtest is an easy to use interactive frontend
 for the regex crate."""
 
 [dependencies]
-regex = "^0.1.80"
+regex = "^0.2.1"
 rustyline = "1.0.0"
 time = "^0.1.35"
 bitflags = "^0.7.0"
