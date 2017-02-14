@@ -264,7 +264,7 @@ fn main() {
             .help("Enable capture group display after matching test"))
         .arg(Arg::with_name("no-compile-time")
             .long("no-compile-time")
-            .help("Disable showing the amount of time it tookto compile the regular expression."))
+            .help("Disable showing the amount of time it took to compile the regular expression."))
         .get_matches();
 
     if matches.is_present("no-verbose-errors") {
