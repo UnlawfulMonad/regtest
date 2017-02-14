@@ -1,9 +1,10 @@
 [package]
 name = "regtest"
-version = "0.3.0"
+version = "0.3.2"
 authors = ["Lucas Salibian <lucas.salibian@gmail.com>"]
 homepage = "https://github.com/tqoitc/regtest"
 repository = "https://github.com/tqoitc/regtest"
+documentation = "https://github.com/tqoitc/regtest"
 readme = "README.md"
 keywords = ["regex", "command"]
 license = "GPL-3.0"
