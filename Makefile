@@ -4,3 +4,5 @@ clean:
 
 build:
 	cargo build --release --verbose
+
+binary: build
