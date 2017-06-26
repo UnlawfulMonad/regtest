@@ -8,8 +8,7 @@ documentation = "https://github.com/tqoitc/regtest"
 readme = "README.md"
 keywords = ["regex", "command"]
 license = "GPL-3.0"
-description = """regtest is an easy to use interactive frontend
-for the regex crate."""
+description = "regtest is an easy to use interactive frontend for the regex crate."
 
 [dependencies]
 regex = "^0.2.1"
@@ -20,9 +19,5 @@ clap = "2.13.0"
 app_dirs = "1.1.1"
 
 [profile.release]
-opt-level = 3
-debug = false
-debug-assertions = false
 lto = true
-codegen-units = 1
-panic = 'unwind'
+opt-level = 3
