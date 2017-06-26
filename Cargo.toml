@@ -1,6 +1,6 @@
 [package]
 name = "regtest"
-version = "0.3.3"
+version = "0.3.4"
 authors = ["Lucas Salibian <lucas.salibian@gmail.com>"]
 homepage = "https://github.com/tqoitc/regtest"
 repository = "https://github.com/tqoitc/regtest"
