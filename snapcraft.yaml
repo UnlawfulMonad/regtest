@@ -1,0 +1,27 @@
+name: regtest
+version: git
+summary: Easy way of testing regular expressions
+description: |
+    An easy way to test regular expressions. Uses the Rust
+    regex crate.
+
+confinement: devmode
+
+apps:
+  regtest:
+    command: regtest
+
+parts:
+  regtest:
+    source: .
+    plugin: rust
+    build-attributes: [no-system-libraries]
+    build-packages:
+      - libudev-dev
+      - libssl-dev
+      - make
+      - pkg-config
+    stage-packages:
+      - libssl1.0.0
+      - libudev1
+      - libstdc++6
