@@ -146,7 +146,7 @@ dependencies = [
 
 [[package]]
 name = "regtest"
-version = "0.3.4"
+version = "0.3.5"
 dependencies = [
  "app_dirs 1.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "bitflags 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
