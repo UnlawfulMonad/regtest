@@ -13,60 +13,44 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
-//
 
 #![allow(dead_code)]
 #![allow(non_upper_case_globals)]
 #![allow(unused_must_use)]
 
-extern crate regex;
-extern crate time;
-#[macro_use]
-extern crate bitflags;
-extern crate rustyline;
-extern crate clap;
-extern crate app_dirs;
-
 use std::io;
 use std::io::Write;
-use std::default::Default;
 use std::path::PathBuf;
+use std::time::Instant;
 
 use regex::Regex;
+use clap::{Arg, ArgAction, Command};
+use rustyline::DefaultEditor;
+use directories::ProjectDirs;
 
-use clap::{Arg, App};
-
-use rustyline::Editor;
-
-use app_dirs::{AppInfo, AppDataType, app_root};
-
-const APP_INFO: AppInfo = AppInfo {
-    name: "regtest",
-    author: "Lucas Salibian",
-};
-
-bitflags! {
-    flags Config: u32 {
-        const VERBOSE_ERRORS = 0b00000001,
-        const CAPTURE_GROUPS = 0b00000010,
-        const COMPILE_TIME   = 0b00000100,
+bitflags::bitflags! {
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    struct Config: u32 {
+        const VERBOSE_ERRORS = 0b00000001;
+        const CAPTURE_GROUPS = 0b00000010;
+        const COMPILE_TIME   = 0b00000100;
     }
 }
 
 impl Default for Config {
     fn default() -> Config {
-        VERBOSE_ERRORS | COMPILE_TIME
+        Config::VERBOSE_ERRORS | Config::COMPILE_TIME
     }
 }
 
-const HELP: &'static str = "\
+const HELP: &str = "\
 :t - Toggle compile time display
 :g - Toggle capture groups display
 :v - Toggle verbose errors
 :h - Print this menu
 :q - Quit";
 
-const MENU_PRMT: &'static str = ":b - Go back to the regex prompt";
+const MENU_PRMT: &str = ":b - Go back to the regex prompt";
 
 /// Define the possible things that may happen after a menu
 /// ineration within any of the sub menus (regex input or
@@ -82,15 +66,12 @@ enum Action {
 /// Check if a given `line` corresponds to a menu command.
 fn options_menu(line: &str, config: &mut Config) -> Action {
     let mut stderr = io::stderr();
-    // What can you do from here?
-    match &line as &str {
-        // Quit on :q
+    match line {
         ":q" => Action::Exit,
 
-        // Toggle verbose errors
         ":v" => {
-            config.toggle(VERBOSE_ERRORS);
-            if config.contains(VERBOSE_ERRORS) {
+            config.toggle(Config::VERBOSE_ERRORS);
+            if config.contains(Config::VERBOSE_ERRORS) {
                 write!(stderr, "Verbose errors: on\n");
             } else {
                 write!(stderr, "Verbose errors: off\n");
@@ -98,11 +79,9 @@ fn options_menu(line: &str, config: &mut Config) -> Action {
             Action::Loop
         }
 
-        // Toggle message reporting time to
-        // compile regex
         ":t" => {
-            config.toggle(COMPILE_TIME);
-            if config.contains(COMPILE_TIME) {
+            config.toggle(Config::COMPILE_TIME);
+            if config.contains(Config::COMPILE_TIME) {
                 write!(stderr, "Show compile time: on\n");
             } else {
                 write!(stderr, "Show compile time: off\n");
@@ -110,14 +89,11 @@ fn options_menu(line: &str, config: &mut Config) -> Action {
             Action::Loop
         }
 
-        // When in regex test menu, go back to regex
-        // prompt. Otherwise, do nothing
         ":b" => Action::ToRegexPrompt,
 
-        // Toggle displaying capture groups
         ":g" => {
-            config.toggle(CAPTURE_GROUPS);
-            if config.contains(CAPTURE_GROUPS) {
+            config.toggle(Config::CAPTURE_GROUPS);
+            if config.contains(Config::CAPTURE_GROUPS) {
                 write!(stderr, "Show capture groups: on\n");
             } else {
                 write!(stderr, "Show capture groups: off\n");
@@ -125,13 +101,11 @@ fn options_menu(line: &str, config: &mut Config) -> Action {
             Action::Loop
         }
 
-        // Display help
         ":h" | ":?" => {
             write!(stderr, "{}\n", HELP);
             Action::Loop
         }
 
-        // Continue
         _ => Action::Continue,
     }
 }
@@ -139,27 +113,23 @@ fn options_menu(line: &str, config: &mut Config) -> Action {
 /// Show a prompt saying "n>" requesting that a regex be input.
 /// If this function returns true, the user will be prompted
 /// to input a regex and if false the program will exit.
-fn regex_prompt(editor: &mut Editor<()>, config: &mut Config) -> bool {
-    // Get stderr up here just for convienience
+fn regex_prompt(editor: &mut DefaultEditor, config: &mut Config) -> bool {
     let mut stderr = io::stderr();
 
-    // Read the line and add it to history
     let line = editor.readline("Input> ").expect("Failed to read line!");
-    editor.add_history_entry(&line);
+    editor.add_history_entry(line.as_str());
 
-    // Process the line against the options menu
     match options_menu(&line, config) {
         Action::Continue => {}
         Action::ToRegexPrompt | Action::Loop => return true,
         Action::Exit => return false,
     }
 
-    // Get the time for compiling regex
-    let t1 = time::now();
+    let t1 = Instant::now();
     let reg = match Regex::new(&line) {
         Ok(r) => r,
         Err(e) => {
-            if config.contains(VERBOSE_ERRORS) {
+            if config.contains(Config::VERBOSE_ERRORS) {
                 write!(stderr, "Error compiling regex: {:?}\n", e);
             } else {
                 stderr.write(b"Failed to compile regex\n");
@@ -169,42 +139,30 @@ fn regex_prompt(editor: &mut Editor<()>, config: &mut Config) -> bool {
         }
     };
 
-    let t2 = time::now();
-    // Display the time if the appropriate flag is set
-    if config.contains(COMPILE_TIME) {
-        let dur = t2 - t1;
-        write!(stderr,
-               "Regex compiled in {}ns\n",
-               match dur.num_nanoseconds() {
-                   Some(x) => x,
-                   None => dur.num_milliseconds(),
-               });
+    if config.contains(Config::COMPILE_TIME) {
+        write!(stderr, "Regex compiled in {}ns\n", t1.elapsed().as_nanos());
     }
 
-    // Display a prompt using the compiled regex
     prompt(editor, &reg, config)
 }
 
 // If this returns false, the program with exit.
 // If it returns true, the prompt for a new regex
 // will be shown.
-fn prompt(editor: &mut Editor<()>, reg: &Regex, config: &mut Config) -> bool {
+fn prompt(editor: &mut DefaultEditor, reg: &Regex, config: &mut Config) -> bool {
     let mut stderr = io::stderr();
-    let prompt = &format!("Regex({})> ", reg.as_str());
+    let prompt_str = format!("Regex({})> ", reg.as_str());
 
     loop {
-        let line = editor.readline(prompt).expect("Failed to read line");
-        editor.add_history_entry(&line);
+        let line = editor.readline(&prompt_str).expect("Failed to read line");
+        editor.add_history_entry(line.as_str());
 
-        // Enable menu
         match options_menu(&line, config) {
             Action::Exit => return false,
             Action::Loop => continue,
             Action::ToRegexPrompt => return true,
-            // Not a command so test it against the regex
             Action::Continue => {
-                // Are we dealing with capture groups?
-                if config.contains(CAPTURE_GROUPS) {
+                if config.contains(Config::CAPTURE_GROUPS) {
                     let caps = reg.captures_iter(&line).enumerate();
                     write!(stderr, "Captures:\n");
                     for (i, outer_cap) in caps {
@@ -216,71 +174,73 @@ fn prompt(editor: &mut Editor<()>, reg: &Regex, config: &mut Config) -> bool {
                                    if let Some(c) = cap { c.as_str() } else { "None" });
                         }
                     }
+                } else if reg.is_match(&line) {
+                    write!(stderr, "Matched\n");
                 } else {
-                    if reg.is_match(&line) {
-                        write!(stderr, "Matched\n");
-                    } else {
-                        write!(stderr, "Failed to match\n");
-                    }
+                    write!(stderr, "Failed to match\n");
                 }
             }
         }
     }
 }
 
-/// Determine and load the history file erroring out
-/// upon failure.
-///
-/// # Notes
-/// Failure within this function is non-fatal. It will
-/// not panic and only show a warning to the user.
+/// Determine the history file path, creating its directory if needed.
+/// Failure is non-fatal — only a warning is shown.
 fn with_history_file<F>(mut f: F)
-    where F: FnMut(&PathBuf)
+where
+    F: FnMut(&PathBuf),
 {
-    let mut path = match app_root(AppDataType::UserData, &APP_INFO) {
-        Ok(p) => p,
-        Err(e) => {
-            println!("Failed to write history file: {:?}", e);
+    let dirs = match ProjectDirs::from("", "Lucas Salibian", "regtest") {
+        Some(d) => d,
+        None => {
+            println!("Failed to determine history file location");
             return;
         }
     };
+    let data_dir = dirs.data_dir();
+    if let Err(e) = std::fs::create_dir_all(data_dir) {
+        println!("Failed to create data directory: {:?}", e);
+        return;
+    }
+    let mut path = data_dir.to_path_buf();
     path.push("history");
     f(&path);
 }
 
 fn main() {
     let mut config = Config::default();
-    // Configure command line flags
-    let matches = App::new("regtest")
+
+    let matches = Command::new("regtest")
         .version(env!("CARGO_PKG_VERSION"))
         .author("Lucas Salibian <lucas.salibian@gmail.com>")
         .about("Test regexes from the command line")
-        .arg(Arg::with_name("no-verbose-errors")
+        .arg(Arg::new("no-verbose-errors")
             .long("no-verbose-errors")
-            .help("Disable verbose errors when the regex fails to compile"))
-        .arg(Arg::with_name("capture")
-            .short("c")
+            .help("Disable verbose errors when the regex fails to compile")
+            .action(ArgAction::SetTrue))
+        .arg(Arg::new("capture")
+            .short('c')
             .long("capture")
-            .help("Enable capture group display after matching test"))
-        .arg(Arg::with_name("no-compile-time")
+            .help("Enable capture group display after matching test")
+            .action(ArgAction::SetTrue))
+        .arg(Arg::new("no-compile-time")
             .long("no-compile-time")
-            .help("Disable showing the amount of time it took to compile the regular expression."))
+            .help("Disable showing the amount of time it took to compile the regular expression.")
+            .action(ArgAction::SetTrue))
         .get_matches();
 
-    if matches.is_present("no-verbose-errors") {
-        config.remove(VERBOSE_ERRORS);
+    if matches.get_flag("no-verbose-errors") {
+        config.remove(Config::VERBOSE_ERRORS);
     }
 
-    if matches.is_present("capture") {
-        config.insert(CAPTURE_GROUPS);
+    if matches.get_flag("capture") {
+        config.insert(Config::CAPTURE_GROUPS);
     }
 
-    // Initialize the rustline (readline) editor
-    let mut editor = Editor::<()>::new();
+    let mut editor = DefaultEditor::new().unwrap();
 
     with_history_file(|path| { editor.load_history(path); });
 
-    // Enter the main loop
     loop {
         if !regex_prompt(&mut editor, &mut config) {
             break;
